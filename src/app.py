@@ -2,6 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 from pathlib import Path
+import sys
 
 # Load environment
 load_dotenv()
@@ -16,36 +17,55 @@ load_dotenv(ENV_PATH)
 BASE = os.getenv("JOPLIN_BASE")
 TOKEN = os.getenv("JOPLIN_TOKEN")
 
+# Environmental parameters check
 if not BASE or not TOKEN:
     raise RuntimeError("Joplin link or Joplin Token missing check .env file or read the documentation")
 
-def fetch_notes():
+
+# Pulling notes from joplin (limiting note pulling - for per API connection)
+def fetch_notes(limit=30):
     url = f"{BASE}/notes"
-    # down below don't we need try except block? if res can't conenct to joplin it should say can't connect not running?
-    res = requests.get(
-        url,
-        params={
-            "token": TOKEN,
-            "fields": "id,title,created_time,updated_time,source_url,body",
-            "limit": 50
-            },
-        timeout=10
-    )
+    page = 1
+    all_items = []
 
-    try:
-        res.raise_for_status()
-        return res.json()
+    while True:
+        try:
+            res = requests.get(
+                url,
+                params={
+                    "token": TOKEN,
+                    "fields": "id,title,created_time,updated_time,source_url,body",
+                    "limit": limit,
+                    "page": page
+                },
+                timeout=10
+            )
+            res.raise_for_status()
+            payload = res.json()
 
-    except requests.exceptions.Timeout:
-        raise RuntimeError("Joplin API time out. App not running or slow")
+        except requests.exceptions.Timeout:
+            raise RuntimeError("Joplin API timed out. App not running or slow.")
+        except requests.exceptions.ConnectionError:
+            raise RuntimeError("Cannot connect to Joplin. Service offline?")
+        except requests.exceptions.HTTPError as e:
+            raise RuntimeError(f"HTTP Error from Joplin: {e}")
 
-    except requests.exceptions.ConnectionError:
-        raise RuntimeError("Cannot connect to Joplin. May service offline?")
+        items = payload.get("items",[])
+        all_items.extend(items)
 
-    except requests.exceptions.HTTPError as e:
-        raise RuntimeError(f"HTTP Error from Joplin: {e}")
+        print(f"Pulled page {page} -> {len(items)} notes")
 
+        if payload.get("has_more") is False:
+            break
+        page +=1
+    return all_items
 
-data = fetch_notes()
-print("Status: OK")
-print(len(data.get("items", [])), "notes pulled succesfully")
+#a = fetch_notes()
+#print(a)
+
+try:
+    notes = fetch_notes()
+    print(f"Total pulled: {len(notes)}")
+except RuntimeError as e:
+    print(e)
+    sys.exit(1)
