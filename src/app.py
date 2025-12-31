@@ -13,42 +13,63 @@ Responsibilities:
 - Prepare for logging and orchestration enhancements in future phases
 """
 
-import os
 import sys
+from pprint import pprint
 
 import extract      as ext
 import transform    as tr
 import load         as load
 import config       as conf
 
-#a = fetch_notes()
-#print(a)
-
-try:
-    notes = ext.fetch_notes()
-    print(f"Total pulled: {len(notes)}")
-except RuntimeError as e:
-    print(e)
-    print("\n\nExtraction failed!")
-    sys.exit(1)
-
-"""
-# Place holder for transform and load steps
-try:
-    df = tr.transform_notes(notes)
-except RuntimeError as e:
-    print("\n\nTransformation failed!")
-    print(e)
-    sys.exit
-
-try:
-    load.to_duckdb(df)
-except RuntimeError as e:
-    print("\n\nTransformation failed!")
-    print(e)
-    sys.exit
-"""
 
 
+def main():
+    # ------------------------
+    # Extract
+    # ------------------------
+    try:
+        notes = ext.fetch_notes()
+        print(f"\nPulled {len(notes)} notes from Joplin\n")
+    except RuntimeError as e:
+        print("Extraction failed")
+        print(e)
+        sys.exit(1)
+
+    # Sample test
+    print("Sample raw payload:")
+    for note in notes[:3]:
+        pprint({
+            "id": note["id"],
+            "title": note["title"],
+            "created": note["created_time"]
+        })
+
+    # ------------------------
+    #  Transform
+    # ------------------------
+    try:
+        df = tr.transform_notes(notes)
+    except RuntimeError as e:
+        print("Transformation failed")
+        print(e)
+        sys.exit(1)
+
+    print("\nTransformed dataframe preview:")
+    print(df.head())
+    print("\nSchema:")
+    print(df.dtypes)
+    print(f"\nTotal rows: {len(df)}")
+
+    # ------------------------
+    # Load (placeholder)
+    # ------------------------
+    # try:
+    #     load.to_duckdb(df)
+    # except RuntimeError as e:
+    #     print("Load failed")
+    #     print(e)
+    #     sys.exit(1)
 
 
+if __name__ == "__main__":
+    main()
