@@ -23,6 +23,7 @@ import config       as conf
 
 
 
+
 def main():
     # ------------------------
     # Extract
@@ -61,15 +62,17 @@ def main():
     print(f"\nTotal rows: {len(df)}")
 
     # ------------------------
-    # Load (placeholder)
+    # Load
     # ------------------------
-    # try:
-    #     load.to_duckdb(df)
-    # except RuntimeError as e:
-    #     print("Load failed")
-    #     print(e)
-    #     sys.exit(1)
+    try:
+        load.load_notes(df)
+    except RuntimeError as e:
+        print("Load failed")
+        print(e)
+        sys.exit(1)
 
+    print("\nData Loaded Successfully:")
+    print(f"\nTotal rows: {len(df)}")
 
 if __name__ == "__main__":
     main()

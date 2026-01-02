@@ -29,9 +29,14 @@ load_dotenv(ENV_PATH)
 BASE = os.getenv("JOPLIN_BASE")
 TOKEN = os.getenv("JOPLIN_TOKEN")
 
+# Call database
+DB_PATH = os.getenv("DB_PATH", "mindatlas.duckdb")
+NOTES_TABLE = "notes"
+
 # Environmental parameters check
 if not BASE or not TOKEN:
     raise RuntimeError("Joplin link or Joplin Token missing check .env file or read the documentation")
+
 
 
 
