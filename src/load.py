@@ -37,6 +37,19 @@ def init_db():
         );
     """)
 
+    con.execute(f"""
+        CREATE TABLE IF NOT EXISTS {LAST_LOAD_TABLE} (
+            id INTEGER PRIMARY KEY,
+            last_load_at TIMESTAMP
+        );
+    """)
+
+    con.execute(f"""
+        INSERT INTO {LAST_LOAD_TABLE} (id, last_load_at)
+        VALUES (1, NULL)
+        ON CONFLICT (id) DO NOTHING;
+    """)
+
     return con
 
 
