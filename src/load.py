@@ -14,7 +14,7 @@ Responsibilities:
 """
 import duckdb
 import logging
-from config import DB_PATH, NOTES_TABLE
+from config import DB_PATH, NOTES_TABLE, LAST_LOAD_TABLE
 
 logging.basicConfig(level=logging.INFO)
 
@@ -35,6 +35,19 @@ def init_db():
             created_date DATE,
             ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+    """)
+
+    con.execute(f"""
+        CREATE TABLE IF NOT EXISTS {LAST_LOAD_TABLE} (
+            id INTEGER PRIMARY KEY,
+            last_load_at TIMESTAMP
+        );
+    """)
+
+    con.execute(f"""
+        INSERT INTO {LAST_LOAD_TABLE} (id, last_load_at)
+        VALUES (1, NULL)
+        ON CONFLICT (id) DO NOTHING;
     """)
 
     return con
@@ -86,3 +99,13 @@ def load_notes(df):
 
     logging.info("Load completed successfully")
 
+    con.execute(f"""
+        UPDATE {LAST_LOAD_TABLE}
+        SET last_load_at = (
+            SELECT MAX(updated_at)
+            FROM {NOTES_TABLE}
+        )
+        WHERE id = 1;
+    """)
+
+    logging.info("last_update_at updated successfully")

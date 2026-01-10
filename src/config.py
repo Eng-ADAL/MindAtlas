@@ -32,6 +32,7 @@ TOKEN = os.getenv("JOPLIN_TOKEN")
 # Call database
 DB_PATH = os.getenv("DB_PATH", "mindatlas.duckdb")
 NOTES_TABLE = "notes"
+LAST_LOAD_TABLE = "pipeline_state"
 
 # Environmental parameters check
 if not BASE or not TOKEN:
