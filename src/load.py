@@ -14,7 +14,7 @@ Responsibilities:
 """
 import duckdb
 import logging
-from config import DB_PATH, NOTES_TABLE
+from config import DB_PATH, NOTES_TABLE, LAST_LOAD_TABLE
 
 logging.basicConfig(level=logging.INFO)
 
@@ -99,3 +99,13 @@ def load_notes(df):
 
     logging.info("Load completed successfully")
 
+    con.execute(f"""
+        UPDATE {LAST_LOAD_TABLE}
+        SET last_load_at = (
+            SELECT MAX(updated_at)
+            FROM {NOTES_TABLE}
+        )
+        WHERE id = 1;
+    """)
+
+    logging.info("last_update_at updated successfully")
